@@ -598,18 +598,8 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
 
     let currentFile = null; // menyimpan file yang diunggah
     let ketikIlustrasiTimeout; // Simpan ID timeout agar bisa dihentikan
-// === VARIABEL GLOBAL UNTUK FORMAT OTOMATIS ===
-let rawJson = "";
-
-
-// === EVENT HANDLER UNTUK RADIO FORMAT ===
-const formatRadiosAfterRender = document.querySelectorAll('#format-options input[name="format"]');
-formatRadiosAfterRender.forEach(radio => {
-  radio.addEventListener('click', () => {
-    const selectedFormat = radio.value;
-    updateFormat(selectedFormat);
-  });
-});
+   // === VARIABEL GLOBAL UNTUK FORMAT OTOMATIS ===
+   let rawJson = "";
 
 
 
