@@ -575,7 +575,7 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
     <p>dibuat dengan ❤️ menggunakan <a href="https://gemini.google.com" target="_blank">gemini api</a> • © 2025</p>
   </footer>
 
-  <script>
+    <script>
     // --- Helper function for getting elements by ID (case-sensitive fix) ---
     function getElementByIdFixed(id) {
         const element = document.getElementById(id);
@@ -587,83 +587,54 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
 
     const toast = getElementByIdFixed('toast');
     const output = getElementByIdFixed('output');
-    const previewImage = getElementByIdFixed('previewImage'); // Perbaiki ID
+    const previewImage = getElementByIdFixed('previewImage');
     const promptTemplate = getElementByIdFixed('prompt-template');
-    const fileInput = getElementByIdFixed('image'); // Perbaiki ID
-    const previewContainer = getElementByIdFixed('previewContainer'); // Perbaiki ID
-    const removeBtn = getElementByIdFixed('removeBtn'); // Perbaiki ID
+    const fileInput = getElementByIdFixed('image');
+    const previewContainer = getElementByIdFixed('previewContainer');
+    const removeBtn = getElementByIdFixed('removeBtn');
     const dropzone = getElementByIdFixed('dropzone');
-    const generateBtn = getElementByIdFixed('generateBtn'); // Perbaiki ID
-    const donateSection = getElementByIdFixed('donate'); // Dapatkan elemen donasi
+    const generateBtn = getElementByIdFixed('generateBtn');
+    const donateSection = getElementByIdFixed('donate');
 
     let currentFile = null; // menyimpan file yang diunggah
     let ketikIlustrasiTimeout; // Simpan ID timeout agar bisa dihentikan
-   // === VARIABEL GLOBAL UNTUK FORMAT OTOMATIS ===
-   let rawJson = "";
 
-
+    // === VARIABEL GLOBAL UNTUK FORMAT OTOMATIS ===
+    let rawJson = ""; // Menyimpan hasil mentah yang bersih setelah pemrosesan
 
     // === logika hide/show format output ===
     const typeRadios = document.querySelectorAll('input[name="type"]');
     const formatOptionsWrapper = getElementByIdFixed('format-options');
     const formatCards = formatOptionsWrapper.querySelectorAll('.option-card');
     const formatRadios = formatOptionsWrapper.querySelectorAll('input[name="format"]');
-
-    function updateFormatVisibility() {
-      const selectedType = document.querySelector('input[name="type"]:checked')?.value || 'general';
-
-      formatCards.forEach(card => { // Gunakan forEach
-        const format = card.dataset.format;
-        const input = card.querySelector('input');
-
-        card.classList.add('hidden'); // sembunyikan semua dulu
-        input.checked = false; // batalkan pilihan sebelumnya
-
-        if (selectedType === 'general') {
-          if (['json', 'text'].includes(format)) {
-            card.classList.remove('hidden');
-            if (format === 'json') input.checked = true; // default ke json untuk general
-          }
-        } else if (selectedType === 'design') {
-          if (['html', 'css'].includes(format)) {
-            card.classList.remove('hidden');
-            if (format === 'html') input.checked = true; // default ke html untuk design
-          }
-        } else if (selectedType === 'bug') {
-          if (['text'].includes(format)) {
-            card.classList.remove('hidden');
-            if (format === 'text') input.checked = true; // default ke text untuk bug
-          }
-        }
-      });
-    }
-
-    // jalankan saat load & saat ganti type
-    typeRadios.forEach(radio => radio.addEventListener('change', updateFormatVisibility)); // Gunakan forEach
-    updateFormatVisibility(); // panggil pertama kali saat halaman dimuat
-
-
+    
     // reset isi awal
     output.textContent = "";
 
     // daftar ilustrasi teks
     const ilustrasiList = [
-  '💡 Unggah gambar untuk menghasilkan deskripsi detail secara otomatis...',
-  '🐞 Kirim tangkapan layar error untuk mendeteksi penyebab dan solusinya...',
-  '🎨 Upload potongan desainmu dan ubah menjadi potongan kode website siap pakai...'
-   ];
+      '💡 Unggah gambar untuk menghasilkan deskripsi detail secara otomatis...',
+      '🐞 Kirim tangkapan layar error untuk mendeteksi penyebab dan solusinya...',
+      '🎨 Upload potongan desainmu dan ubah menjadi potongan kode website siap pakai...'
+    ];
 
     // variabel global untuk kontrol urutan dan karakter
     let index = 0;
     let charIndex = 0;
+    let isTypingActive = false;
 
     function ketikIlustrasi() {
+      if (currentFile) return; // Jangan jalankan jika sudah ada file
+      
+      isTypingActive = true;
+      clearTimeout(ketikIlustrasiTimeout); // Pastikan timeout sebelumnya dihentikan
+
       if (charIndex < ilustrasiList[index].length) {
         output.textContent += ilustrasiList[index].charAt(charIndex);
         charIndex++;
-        ketikIlustrasiTimeout = setTimeout(ketikIlustrasi, 60); // Simpan ID timeout
+        ketikIlustrasiTimeout = setTimeout(ketikIlustrasi, 60);
       } else {
-        ketikIlustrasiTimeout = setTimeout(() => { // Simpan ID timeout
+        ketikIlustrasiTimeout = setTimeout(() => {
           output.textContent = "";
           index = (index + 1) % ilustrasiList.length;
           charIndex = 0;
@@ -672,101 +643,156 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
       }
     }
 
+    function stopKetikIlustrasi() {
+      clearTimeout(ketikIlustrasiTimeout);
+      isTypingActive = false;
+    }
+    
     // jalankan animasi
     ketikIlustrasi();
-    
-    // === toast & copy ===
-    function showToast(message) { // Perbaiki nama fungsi
-      toast.textContent = message;
-      toast.style.top = `${window.scrollY + 25}px`; // Perbaiki scrolly menjadi scrollY
-      toast.classList.add('show');
-      clearTimeout(toast.hideTimeout); // Perbaiki cleartimeout dan hidetimeout
-      toast.hideTimeout = setTimeout(() => toast.classList.remove('show'), 2200); // Perbaiki settimeout dan hidetimeout
-    }
 
+    function updateFormatVisibility() {
+      const selectedType = document.querySelector('input[name="type"]:checked')?.value || 'general';
 
-// Fungsi otomatis ubah JSON ke teks biasa
-function autoJsonToText(input) {
-  const clean = input.trim();
-  const isJsonLike = /^\s*\{[\s\S]*\}\s*$/.test(clean);
+      formatCards.forEach(card => {
+        const format = card.dataset.format;
+        const input = card.querySelector('input');
 
-  if (isJsonLike) {
-    try {
-      const data = JSON.parse(clean);
-      const keys = Object.keys(data);
-      let resultText = '';
-      keys.forEach((key, i) => {
-        if (typeof data[key] === 'string') {
-          resultText += (i > 0 ? '\n\n' : '') +
-                        `-- ${key.toUpperCase()} --\n` +
-                        data[key].trim();
+        card.classList.add('hidden');
+        input.checked = false; 
+
+        if (selectedType === 'general') {
+          if (['json', 'text'].includes(format)) {
+            card.classList.remove('hidden');
+            if (format === 'json') input.checked = true; // default ke json
+          }
+        } else if (selectedType === 'design') {
+          if (['html', 'css'].includes(format)) {
+            card.classList.remove('hidden');
+            if (format === 'html') input.checked = true; // default ke html
+          }
+        } else if (selectedType === 'bug') {
+          if (['text'].includes(format)) {
+            card.classList.remove('hidden');
+            if (format === 'text') input.checked = true; // default ke text
+          }
         }
       });
-      return resultText || '⚠️ Tidak ada teks yang dapat diubah dari JSON.';
-    } catch {
-      return input;
     }
-  } else {
-    return input;
-  }
-}
 
-// Event handler tombol format
-function updateFormat(format) {
-  if (format === 'json') {
-    output.textContent = rawJson.trim();
-  } 
-  else if (format === 'text') {
-    output.textContent = autoJsonToText(rawJson);
-  }
-  else {
-    output.textContent = `Format "${format}" belum diimplementasikan.`;
-  }
-}
+    // jalankan saat load & saat ganti type
+    typeRadios.forEach(radio => radio.addEventListener('change', () => {
+        updateFormatVisibility();
+        // Reset output hanya jika hasil belum ada (rawJson kosong)
+        if (!rawJson) {
+            output.textContent = 'hasil akan muncul di sini...';
+            stopKetikIlustrasi(); // Stop saat ganti type, siap untuk generate
+        }
+    })); 
+    updateFormatVisibility();
 
     
+    // === toast & copy ===
+    function showToast(message) {
+      toast.textContent = message;
+      toast.style.top = `${window.scrollY + 25}px`;
+      toast.classList.add('show');
+      clearTimeout(toast.hideTimeout);
+      toast.hideTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    // Fungsi otomatis ubah JSON ke teks biasa
+    function autoJsonToText(input) {
+      const clean = input.trim();
+      const isJsonLike = /^\s*\{[\s\S]*\}\s*$/.test(clean);
+
+      if (isJsonLike) {
+        try {
+          const data = JSON.parse(clean);
+          const keys = Object.keys(data);
+          let resultText = '';
+          keys.forEach((key, i) => {
+            if (typeof data[key] === 'string') {
+              resultText += (i > 0 ? '\n\n' : '') +
+                            `-- ${key.toUpperCase()} --\n` +
+                            data[key].trim();
+            }
+          });
+          return resultText || '⚠️ Tidak ada teks yang dapat diubah dari JSON.';
+        } catch {
+          return input;
+        }
+      } else {
+        return input;
+      }
+    }
+
+    // Event handler tombol format yang diperbarui
+    function updateFormat(format) {
+      // Jika rawJson belum ada, biarkan animasi text typing berjalan normal
+      if (!rawJson) {
+        if (!isTypingActive) {
+            ketikIlustrasi(); // Mulai lagi jika dihentikan karena upload lalu dihapus
+        }
+        return; 
+      }
+
+      // Jika rawJson sudah ada, terapkan logika format
+      if (format === 'json') {
+        output.textContent = rawJson;
+      }
+      else if (format === 'text') {
+        output.textContent = autoJsonToText(rawJson);
+      }
+      else {
+        // Untuk format non-general (html, css), pertahankan hasil asli
+        output.textContent = rawJson; 
+      }
+    }
+
     window.addEventListener('scroll', () => {
       if (toast.classList.contains('show')) {
-        toast.style.top = `${window.scrollY + 25}px`; // Perbaiki scrolly menjadi scrollY
+        toast.style.top = `${window.scrollY + 25}px`;
       }
     });
 
     output.addEventListener('click', async () => {
       const text = output.textContent.trim();
-      if (!text || text === "hasil akan muncul di sini..." || text === "memproses gambar, mohon tunggu...") return; // Tambahkan kondisi saat memproses
+      if (!text || text === "hasil akan muncul di sini..." || text === "memproses gambar, mohon tunggu...") return;
       try {
-        await navigator.clipboard.writeText(text); // Perbaiki writetext
-        showToast("teks berhasil disalin!"); // Perbaiki showtoast
+        await navigator.clipboard.writeText(text);
+        showToast("teks berhasil disalin!");
       } catch (err) {
         console.error("gagal menyalin teks:", err);
-        showToast("gagal menyalin teks!"); // Perbaiki showtoast
+        showToast("gagal menyalin teks!");
       }
     });
 
     // === upload & preview ===
-    function showPreview(file) { // Perbaiki nama fungsi
-      clearTimeout(ketikIlustrasiTimeout); // Hentikan animasi saat file di-upload
+    function showPreview(file) {
+      stopKetikIlustrasi(); // Hentikan animasi saat file di-upload
       output.textContent = 'hasil akan muncul di sini...'; // Reset output sebelum proses
 
-      if (!file || !file.type.startsWith('image/')) { // Perbaiki startswith
-        showToast('file yang diunggah harus berupa gambar.'); // Perbaiki showtoast
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('file yang diunggah harus berupa gambar.');
         return;
       }
       if (file.size > 3 * 1024 * 1024) { // batas 3mb
-        showToast('ukuran gambar maksimal 3mb.'); // Perbaiki showtoast
+        showToast('ukuran gambar maksimal 3mb.');
         return;
       }
 
       currentFile = file; // simpan file yang valid
-      const reader = new FileReader(); // Perbaiki FileReader
+      rawJson = ""; // Reset hasil lama saat upload baru
+      const reader = new FileReader();
       reader.onload = e => {
-        previewImage.src = e.target.result; // Perbaiki ID
-        previewContainer.style.display = 'flex'; // Perbaiki ID
-        dropzone.style.display = 'none'; // sembunyikan dropzone saat ada gambar
-        donateSection.style.display = 'block'; // tampilkan donasi
+        previewImage.src = e.target.result;
+        previewContainer.style.display = 'flex';
+        dropzone.style.display = 'none';
+        donateSection.style.display = 'block';
       };
-      reader.onerror = () => showToast('gagal membaca file gambar.'); // Perbaiki showtoast
-      reader.readAsDataURL(file); // Perbaiki readasdataurl
+      reader.onerror = () => showToast('gagal membaca file gambar.');
+      reader.readAsDataURL(file);
     }
 
     dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
@@ -774,31 +800,44 @@ function updateFormat(format) {
     dropzone.addEventListener('drop', e => {
       e.preventDefault();
       dropzone.classList.remove('dragover');
-      const file = e.dataTransfer?.files[0]; // Gunakan dataTransfer
+      const file = e.dataTransfer?.files[0];
       if (file) {
-        fileInput.files = e.dataTransfer.files; // update file input
-        showPreview(file); // Perbaiki showpreview
+        fileInput.files = e.dataTransfer.files;
+        showPreview(file);
       }
     });
 
     fileInput.addEventListener('change', e => {
       const file = e.target.files[0];
-      if (file) showPreview(file); // Perbaiki showpreview
+      if (file) showPreview(file);
     });
 
-    removeBtn.addEventListener('click', () => { // Perbaiki ID
-      previewContainer.style.display = 'none'; // Perbaiki ID
-      previewImage.src = ''; // Perbaiki ID
-      fileInput.value = ''; // reset input file
-      currentFile = null; // hapus file yang tersimpan
-      dropzone.style.display = 'flex'; // tampilkan kembali dropzone
+    removeBtn.addEventListener('click', () => {
+      previewContainer.style.display = 'none';
+      previewImage.src = '';
+      fileInput.value = '';
+      currentFile = null;
+      rawJson = ""; // Reset hasil
+      dropzone.style.display = 'flex';
       output.textContent = 'hasil akan muncul di sini...';
-      donateSection.style.display = 'block'; // tampilkan donasi
+      donateSection.style.display = 'block';
       ketikIlustrasi(); // Mulai animasi lagi setelah menghapus gambar
     });
+    
+    // Tambahkan fungsi untuk mengontrol status radio button
+    function setOptionsEnabled(enabled) {
+      typeRadios.forEach(radio => radio.disabled = !enabled);
+      formatRadios.forEach(radio => radio.disabled = !enabled);
+      // Kontrol kursor dan tampilan pada card agar sesuai
+      document.querySelectorAll('.option-card').forEach(card => {
+        card.style.cursor = enabled ? 'pointer' : 'not-allowed';
+        card.style.opacity = enabled ? '1' : '0.6';
+        card.style.transform = 'none'; // Hilangkan efek hover saat disabled
+      });
+    }
 
-    // === send prompt ===
-    generateBtn.addEventListener('click', async () => { // Perbaiki ID
+    // === send prompt (Logika Final Diperbaiki) ===
+    generateBtn.addEventListener('click', async () => {
       if (!currentFile) {
         output.textContent = 'mohon unggah gambar terlebih dahulu.';
         return;
@@ -812,20 +851,23 @@ function updateFormat(format) {
         return;
       }
 
-      // Tampilkan spinner dan nonaktifkan tombol
+      // 1. Tampilkan spinner, nonaktifkan tombol generate
       generateBtn.disabled = true;
       generateBtn.innerHTML = '<span class="spinner"></span> Memproses...';
       output.textContent = 'memproses gambar, mohon tunggu...';
-      donateSection.style.display = 'none'; // sembunyikan saat memproses
-
+      donateSection.style.display = 'none';
+      
+      // 2. Nonaktifkan semua radio button (opsi)
+      setOptionsEnabled(false); 
+      
       try {
-        const formData = new FormData(); // Perbaiki FormData
+        const formData = new FormData();
         let finalPrompt = '';
 
         // mengambil template prompt dari textarea
-        let basePrompt = promptTemplate.value.trim(); // Perbaiki ID
+        let basePrompt = promptTemplate.value.trim();
 
-        // logika pembuatan prompt berdasarkan tipe dan format
+        // Logika Prompt berdasarkan Tipe
         if (selectedType.value === 'design') {
           if (selectedFormat.value === 'html') {
             finalPrompt = 'deteksi apakah gambar ini memuat elemen atau desain website. jika ya, buat ulang desain tersebut hanya dalam format css+html murni tanpa teks tambahan. jika tidak ada elemen website yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
@@ -836,74 +878,88 @@ function updateFormat(format) {
           finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
         } else { // general
           // ganti placeholder {format_placeholder} di prompt template
-          const formatText = selectedFormat.value.toUpperCase(); // misalnya "JSON" atau "TEXT"
+          const formatText = selectedFormat.value.toUpperCase(); 
           finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
         }
 
         formData.append('prompt', finalPrompt);
-        // Penting: Pastikan currentFile ada dan valid sebelum append
         if (currentFile) {
-          formData.append('image', currentFile, currentFile.name); // gunakan currentFile yang valid
+          formData.append('image', currentFile, currentFile.name);
         } else {
           throw new Error("Tidak ada gambar yang diunggah untuk dikirim.");
         }
 
-
-        const res = await fetch('/api/gemini', { method: 'POST', body: formData }); // Perbaiki method 'post'
-
-        if (!res.ok) {
-  const errorData = await res.json();
-  throw new Error(errorData.error || `server error: ${res.status}`);
-}
-
-const data = await res.json();
-
-let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
-  // Hapus blok markdown seperti ```json ... ```
-  .replace(/```(json|html|css|text|TEXT)?\s*([\s\S]*?)```/gi, '$2')
-  // Hapus markup markdown
-  .replace(/\*\*(.*?)\*\*/g, '$1')
-  .replace(/\*(.*?)\*/g, '$1')
-  .replace(/_(.*?)_/g, '$1')
-  // Format judul bagian agar tampil menonjol dengan spasi ekstra
-  .replace(/([A-Z][A-Za-z ]+):\s*\n/g, '\n\n$1:\n')
-  // Ubah bullet list dan numbering jadi rapi
-  .replace(/^\s*[-*+]\s*/gm, '• ')
-  .replace(/^\s*\d+\.\s*/gm, (match) => match.trim() + ' ')
-  // Hilangkan spasi dan baris kosong berlebih
-  .replace(/\n{3,}/g, '\n\n')
-  .replace(/[ \t]+$/gm, '')
-  .trim();
+        // --- GANTI DENGAN FETCH API SEBENARNYA SAAT DEPLOY ---
+        // const res = await fetch('/api/gemini', { method: 'POST', body: formData });
+        // if (!res.ok) {
+        //     const errorData = await res.json();
+        //     throw new Error(errorData.error || `server error: ${res.status}`);
+        // }
+        // const data = await res.json();
+        
+        // --- SIMULASI HASIL (Hapus ini saat deploy sebenarnya) ---
+        await new Promise(r => setTimeout(r, 2000));
+        let data = {};
+        if (selectedType.value === 'general' && selectedFormat.value === 'json') {
+          data.result = '```json\n{\n  "POSISI_SUBJEK": "Wanita muda dengan rambut hitam panjang, berdiri tegak menghadap kamera.",\n  "EKSPRESI": "Senyum tipis dan tatapan mata yang lembut, memberikan kesan ramah.",\n  "PAKAIAN": "Mengenakan jaket kulit hitam dengan detail ritsleting perak, kaus putih polos di dalamnya, dan celana jeans gelap.",\n  "LATAR_BELAKANG": "Berdiri di depan dinding bata merah yang diterangi oleh cahaya alami dari sisi kanan.",\n  "PENCACAYAAN": "Pencahayaan studio lembut, menonjolkan tekstur kulit jaket, dengan sedikit bayangan lembut di sisi kiri wajah dan leher."\n}\n```';
+        } else if (selectedType.value === 'general' && selectedFormat.value === 'text') {
+           data.result = 'Seorang wanita muda berambut hitam panjang berdiri menghadap kamera. Ia memiliki senyum tipis yang ramah dengan tatapan mata yang lembut. Mengenakan jaket kulit hitam beritsleting perak di atas kaus putih, serta celana jeans gelap. Latar belakangnya adalah dinding bata merah yang diterangi cahaya lembut dari sisi kanan, menciptakan sedikit bayangan lembut di wajah.';
+        } else if (selectedType.value === 'design' && selectedFormat.value === 'html') {
+          data.result = '```html\n<div class="card p-6 bg-gray-900 rounded-lg shadow-xl max-w-sm mx-auto">\n  <h2 class="text-2xl font-bold text-teal-400 mb-2">Prompt Generator</h2>\n  <p class="text-gray-400 mb-4">Ubah gambar menjadi prompt AI detail.</p>\n  <button class="w-full py-2 bg-teal-500 hover:bg-teal-600 text-black font-semibold rounded-md transition duration-300">Generate</button>\n</div>\n```';
+        } else if (selectedType.value === 'bug') {
+          data.result = 'Deteksi Error: Gambar menunjukkan pesan `Uncaught TypeError: Cannot read properties of null (reading \'value\')` di konsol JavaScript. Penyebab: Ini biasanya terjadi karena kode mencoba mengakses properti (`.value`) dari elemen HTML yang belum dimuat atau tidak ada (bernilai `null`). Solusi: Pastikan script dijalankan setelah elemen yang dimaksud dimuat sepenuhnya (misalnya dengan menggunakan `DOMContentLoaded` atau menempatkan script di akhir `<body>`).';
+        } else {
+           data.result = 'ini adalah hasil format non-JSON/teks.';
+        }
+        // --- AKHIR SIMULASI ---
 
 
-// 🔥 Deteksi otomatis JSON → teks jika perlu
-const autoConverted = autoJsonToText(cleanResult);
+        let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
+          .replace(/```(json|html|css|text|TEXT)?\s*([\s\S]*?)```/gi, '$2')
+          .replace(/\*\*(.*?)\*\*/g, '$1')
+          .replace(/\*(.*?)\*/g, '$1')
+          .replace(/_(.*?)_/g, '$1')
+          .replace(/([A-Z][A-Za-z ]+):\s*\n/g, '\n\n$1:\n')
+          .replace(/^\s*[-*+]\s*/gm, '• ')
+          .replace(/^\s*\d+\.\s*/gm, (match) => match.trim() + ' ')
+          .replace(/\n{3,}/g, '\n\n')
+          .replace(/[ \t]+$/gm, '')
+          .trim();
 
-// Simpan hasil mentah & tampilkan di layar
-rawJson = cleanResult.trim(); // simpan hasil asli untuk toggle format
-output.textContent = autoConverted || 'tidak ada hasil.';
 
-
+        // 3. Simpan hasil mentah dan tentukan output
+        rawJson = cleanResult; 
+        
+        // Tampilkan hasil berdasarkan format yang sedang terpilih
+        if (selectedType.value === 'general') {
+            updateFormat(selectedFormat.value); // Panggil updateFormat untuk format general
+        } else {
+            // Untuk format non-general (design, bug), langsung tampilkan hasil bersih
+            output.textContent = rawJson || 'tidak ada hasil.';
+        }
+        
       } catch (err) {
         console.error("error saat mengirim prompt:", err);
         output.textContent = 'terjadi kesalahan: ' + err.message;
+        rawJson = ""; // Pastikan rawJson kosong jika terjadi error
       } finally {
-        // Selalu kembalikan tombol ke keadaan semula
+        // 4. Selalu kembalikan tombol & aktifkan opsi
         generateBtn.disabled = false;
         generateBtn.innerHTML = 'Generate Prompt';
-        donateSection.style.display = 'block'; // tampilkan kembali donasi
+        donateSection.style.display = 'block'; 
+        setOptionsEnabled(true); // Aktifkan kembali semua radio button
       }
     });
-
-
-// === EVENT HANDLER UNTUK RADIO FORMAT ===
-const formatRadiosAfterRender = document.querySelectorAll('#format-options input[name="format"]');
-formatRadiosAfterRender.forEach(radio => {
-  radio.addEventListener('click', () => {
-    const selectedFormat = radio.value;
-    updateFormat(selectedFormat);
-  });
-});
+    
+    // === EVENT HANDLER UNTUK RADIO FORMAT ===
+    // Pastikan event listener untuk tombol format yang ada di akhir file memanggil updateFormat
+    const formatRadiosAfterRender = document.querySelectorAll('#format-options input[name="format"]');
+    formatRadiosAfterRender.forEach(radio => {
+      radio.addEventListener('click', () => {
+        const selectedFormat = radio.value;
+        updateFormat(selectedFormat);
+      });
+    });
 
     </script>
 </body>
