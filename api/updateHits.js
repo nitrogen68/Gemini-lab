@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
     const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-    const API_URL = "https://api.github.com/repos/nitrogen68/Gemini-lab/contents/data/hits.json";
+    const API_URL = "https://api.github.com/repos/nitrogen68/Gemini-lab/contents/data/hits.json?ref=main";
 
     // Ambil file lama
     const getRes = await fetch(API_URL, {
