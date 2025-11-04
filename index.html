@@ -889,29 +889,27 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
           throw new Error("Tidak ada gambar yang diunggah untuk dikirim.");
         }
 
-        // --- GANTI DENGAN FETCH API SEBENARNYA SAAT DEPLOY ---
-        // const res = await fetch('/api/gemini', { method: 'POST', body: formData });
-        // if (!res.ok) {
-        //     const errorData = await res.json();
-        //     throw new Error(errorData.error || `server error: ${res.status}`);
-        // }
-        // const data = await res.json();
-        
-        // --- SIMULASI HASIL (Hapus ini saat deploy sebenarnya) ---
-        await new Promise(r => setTimeout(r, 2000));
-        let data = {};
-        if (selectedType.value === 'general' && selectedFormat.value === 'json') {
-          data.result = '```json\n{\n  "POSISI_SUBJEK": "Wanita muda dengan rambut hitam panjang, berdiri tegak menghadap kamera.",\n  "EKSPRESI": "Senyum tipis dan tatapan mata yang lembut, memberikan kesan ramah.",\n  "PAKAIAN": "Mengenakan jaket kulit hitam dengan detail ritsleting perak, kaus putih polos di dalamnya, dan celana jeans gelap.",\n  "LATAR_BELAKANG": "Berdiri di depan dinding bata merah yang diterangi oleh cahaya alami dari sisi kanan.",\n  "PENCACAYAAN": "Pencahayaan studio lembut, menonjolkan tekstur kulit jaket, dengan sedikit bayangan lembut di sisi kiri wajah dan leher."\n}\n```';
-        } else if (selectedType.value === 'general' && selectedFormat.value === 'text') {
-           data.result = 'Seorang wanita muda berambut hitam panjang berdiri menghadap kamera. Ia memiliki senyum tipis yang ramah dengan tatapan mata yang lembut. Mengenakan jaket kulit hitam beritsleting perak di atas kaus putih, serta celana jeans gelap. Latar belakangnya adalah dinding bata merah yang diterangi cahaya lembut dari sisi kanan, menciptakan sedikit bayangan lembut di wajah.';
-        } else if (selectedType.value === 'design' && selectedFormat.value === 'html') {
-          data.result = '```html\n<div class="card p-6 bg-gray-900 rounded-lg shadow-xl max-w-sm mx-auto">\n  <h2 class="text-2xl font-bold text-teal-400 mb-2">Prompt Generator</h2>\n  <p class="text-gray-400 mb-4">Ubah gambar menjadi prompt AI detail.</p>\n  <button class="w-full py-2 bg-teal-500 hover:bg-teal-600 text-black font-semibold rounded-md transition duration-300">Generate</button>\n</div>\n```';
+        try {
+        const formData = new FormData(); // Perbaiki FormData
+        let finalPrompt = '';
+
+        // mengambil template prompt dari textarea
+        let basePrompt = promptTemplate.value.trim(); // Perbaiki ID
+
+        // logika pembuatan prompt berdasarkan tipe dan format
+        if (selectedType.value === 'design') {
+          if (selectedFormat.value === 'html') {
+            finalPrompt = 'deteksi apakah gambar ini memuat elemen atau desain website. jika ya, buat ulang desain tersebut hanya dalam format css+html murni tanpa teks tambahan. jika tidak ada elemen website yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
+          } else { // css
+            finalPrompt = 'analisis apakah gambar ini berisi tampilan antarmuka atau gaya desain website. jika ya, hasilkan hanya kode berupa tailwind template murni tanpa teks tambahan. jika tidak ada desain ui yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
+          }
         } else if (selectedType.value === 'bug') {
-          data.result = 'Deteksi Error: Gambar menunjukkan pesan `Uncaught TypeError: Cannot read properties of null (reading \'value\')` di konsol JavaScript. Penyebab: Ini biasanya terjadi karena kode mencoba mengakses properti (`.value`) dari elemen HTML yang belum dimuat atau tidak ada (bernilai `null`). Solusi: Pastikan script dijalankan setelah elemen yang dimaksud dimuat sepenuhnya (misalnya dengan menggunakan `DOMContentLoaded` atau menempatkan script di akhir `<body>`).';
-        } else {
-           data.result = 'ini adalah hasil format non-JSON/teks.';
+          finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
+        } else { // general
+          // ganti placeholder {format_placeholder} di prompt template
+          const formatText = selectedFormat.value.toUpperCase(); // misalnya "JSON" atau "TEXT"
+          finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
         }
-        // --- AKHIR SIMULASI ---
 
 
         let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
