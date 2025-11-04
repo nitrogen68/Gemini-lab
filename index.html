@@ -889,28 +889,14 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
           throw new Error("Tidak ada gambar yang diunggah untuk dikirim.");
         }
 
-        try {
-        const formData = new FormData(); // Perbaiki FormData
-        let finalPrompt = '';
-
-        // mengambil template prompt dari textarea
-        let basePrompt = promptTemplate.value.trim(); // Perbaiki ID
-
-        // logika pembuatan prompt berdasarkan tipe dan format
-        if (selectedType.value === 'design') {
-          if (selectedFormat.value === 'html') {
-            finalPrompt = 'deteksi apakah gambar ini memuat elemen atau desain website. jika ya, buat ulang desain tersebut hanya dalam format css+html murni tanpa teks tambahan. jika tidak ada elemen website yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
-          } else { // css
-            finalPrompt = 'analisis apakah gambar ini berisi tampilan antarmuka atau gaya desain website. jika ya, hasilkan hanya kode berupa tailwind template murni tanpa teks tambahan. jika tidak ada desain ui yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
-          }
-        } else if (selectedType.value === 'bug') {
-          finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
-        } else { // general
-          // ganti placeholder {format_placeholder} di prompt template
-          const formatText = selectedFormat.value.toUpperCase(); // misalnya "JSON" atau "TEXT"
-          finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
-        }
-
+        const res = await fetch('/api/gemini', { method: 'POST', body: formData }); // Perbaiki method 'post'  
+  
+        if (!res.ok) {  
+          const errorData = await res.json(); // Perbaiki errordata  
+          throw new Error(errorData.error || `server error: ${res.status}`); // Perbaiki error  
+        }  
+  
+        const data = await res.json();
 
         let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
           .replace(/```(json|html|css|text|TEXT)?\s*([\s\S]*?)```/gi, '$2')
