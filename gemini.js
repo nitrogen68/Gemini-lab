@@ -67,7 +67,7 @@ if (!GEMINI_API_KEY) {
 
 console.log("✅ GEMINI_API_KEY berhasil dimuat.");
 
-    const MODEL = "gemini-2.5-flash-image";
+    const MODEL = "gemini-2.5-flash";
     const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
     try {
