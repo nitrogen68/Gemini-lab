@@ -871,6 +871,9 @@ function updateFormat(format) {
   .replace(/[ \t]+$/gm, '')
   .trim();
 
+
+        // 🔥 Tambahkan deteksi otomatis format JSON
+        cleanResult = autoJsonToText(cleanResult);
         output.textContent = cleanResult || 'tidak ada hasil.';
         
       } catch (err) {
