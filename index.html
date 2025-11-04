@@ -534,9 +534,23 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
       </div>
     </div>
 
-    <button id="generateBtn">generate prompt</button> <div style="text-align:center;">
-      <pre id="output" title="klik untuk menyalin hasil">hasil akan muncul di sini...</pre>
-    </div>
+    <button id="generateBtn">generate prompt</button>
+
+<div style="text-align:center;">
+  <pre id="output" title="klik untuk menyalin hasil" style="
+    background:#111;
+    color:#00ffcc;
+    padding:15px;
+    border-radius:8px;
+    white-space:pre-wrap;
+    font-family:'JetBrains Mono', monospace;
+    line-height:1.6;
+    text-align:left;
+    max-width:90%;
+    margin:auto;
+    overflow:auto;
+  ">hasil akan muncul di sini...</pre>
+</div>
 
     <div id="donate" style="text-align:center; margin:35px auto 20px; max-width:380px; background:rgba(0,0,0,0.2); border-radius:12px; padding:12px; box-shadow:0 0 10px rgba(0,255,120,0.05);">
       <h2 style="font-weight:600; color:#e0e0e0; font-size:14px; margin-bottom:10px;">donasi & dukungan:</h2>
@@ -802,19 +816,20 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
         let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
   // Hapus blok markdown seperti ```json ... ```
   .replace(/```(json|html|css|text|TEXT)?\s*([\s\S]*?)```/gi, '$2')
-  // Hapus penanda bold dan italic markdown
+  // Hapus markup markdown
   .replace(/\*\*(.*?)\*\*/g, '$1')
   .replace(/\*(.*?)\*/g, '$1')
   .replace(/_(.*?)_/g, '$1')
-  // Ganti bullet list agar tampil rapi
+  // Format judul bagian agar tampil menonjol dengan spasi ekstra
+  .replace(/([A-Z][A-Za-z ]+):\s*\n/g, '\n\n$1:\n')
+  // Ubah bullet list dan numbering jadi rapi
   .replace(/^\s*[-*+]\s*/gm, '• ')
-  // Tambah jarak antar bagian utama (judul & paragraf)
-  .replace(/([A-Z][A-Za-z ]+:)\n/g, '\n\n$1\n')
-  // Hapus spasi berlebih dan baris kosong berurutan
+  .replace(/^\s*\d+\.\s*/gm, (match) => match.trim() + ' ')
+  // Hilangkan spasi dan baris kosong berlebih
   .replace(/\n{3,}/g, '\n\n')
-  .replace(/^[ \t]+|[ \t]+$/gm, '')
-  .trim();                                 
-        
+  .replace(/[ \t]+$/gm, '')
+  .trim();
+
         output.textContent = cleanResult || 'tidak ada hasil.';
         
       } catch (err) {
@@ -828,12 +843,6 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
       }
     });
 
-    // Menghapus ikon SVG duplikat di JS karena sudah ada di HTML
-    // const uploadBoxSvg = `
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-up"><path d="M12 6V2"/><path d="M12 18V14"/><path d="M16 16 12 12 8 16"/><line x1="12" x2="12" y1="12" y2="21"/></svg>
-    // `;
-    // Pastikan SVG yang digunakan di header juga memiliki `stroke="currentColor"` atau `fill="currentColor"` agar warnanya bisa diatur via CSS.
-    // Ini sudah diperbaiki di bagian HTML.
-  </script>
+    </script>
 </body>
 </html>
