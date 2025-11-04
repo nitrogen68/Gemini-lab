@@ -508,28 +508,28 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
       </div>
 
       <div class="option-group">
-        <h3>format output:</h3>
-        <div class="option-cards" id="format-options">
-          <label class="option-card" data-format="json">
-            <input type="radio" name="format" value="json" checked>
-            <span class="icon">{}</span>
-            <span class="label">json</span>
-          </label>
-          <label class="option-card" data-format="text">
-            <input type="radio" name="format" value="text">
-            <span class="icon">📄</span>
-            <span class="label">teks</span>
-          </label>
-          <label class="option-card" data-format="html">
-            <input type="radio" name="format" value="html">
-            <span class="icon">&lt;/&gt;</span>
-            <span class="label">css+html</span>
-          </label>
-          <label class="option-card" data-format="css">
-            <input type="radio" name="format" value="css">
-            <span class="icon">css</span>
-            <span class="label">tailwind template</span>
-          </label>
+  <h3>format output:</h3>
+  <div class="option-cards" id="format-options">
+    <label class="option-card" data-format="json">
+      <input type="radio" name="format" value="json" checked onclick="updateFormat('json')">
+      <span class="icon">{}</span>
+      <span class="label">json</span>
+    </label>
+    <label class="option-card" data-format="text">
+      <input type="radio" name="format" value="text" onclick="updateFormat('text')">
+      <span class="icon">📄</span>
+      <span class="label">teks</span>
+    </label>
+    <label class="option-card" data-format="html">
+      <input type="radio" name="format" value="html">
+      <span class="icon">&lt;/&gt;</span>
+      <span class="label">css+html</span>
+    </label>
+    <label class="option-card" data-format="css">
+      <input type="radio" name="format" value="css">
+      <span class="icon">css</span>
+      <span class="label">tailwind template</span>
+    </label>
         </div>
       </div>
     </div>
@@ -680,6 +680,47 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
       toast.hideTimeout = setTimeout(() => toast.classList.remove('show'), 2200); // Perbaiki settimeout dan hidetimeout
     }
 
+
+// Fungsi otomatis ubah JSON ke teks biasa
+function autoJsonToText(input) {
+  const clean = input.trim();
+  const isJsonLike = /^\s*\{[\s\S]*\}\s*$/.test(clean);
+
+  if (isJsonLike) {
+    try {
+      const data = JSON.parse(clean);
+      const keys = Object.keys(data);
+      let resultText = '';
+      keys.forEach((key, i) => {
+        if (typeof data[key] === 'string') {
+          resultText += (i > 0 ? '\n\n' : '') +
+                        `-- ${key.toUpperCase()} --\n` +
+                        data[key].trim();
+        }
+      });
+      return resultText || '⚠️ Tidak ada teks yang dapat diubah dari JSON.';
+    } catch {
+      return input;
+    }
+  } else {
+    return input;
+  }
+}
+
+// Event handler tombol format
+function updateFormat(format) {
+  if (format === 'json') {
+    output.textContent = rawJson.trim();
+  } 
+  else if (format === 'text') {
+    output.textContent = autoJsonToText(rawJson);
+  }
+  else {
+    output.textContent = `Format "${format}" belum diimplementasikan.`;
+  }
+}
+
+    
     window.addEventListener('scroll', () => {
       if (toast.classList.contains('show')) {
         toast.style.top = `${window.scrollY + 25}px`; // Perbaiki scrolly menjadi scrollY
