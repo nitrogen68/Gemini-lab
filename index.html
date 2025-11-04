@@ -800,7 +800,7 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
         const data = await res.json();
 
         let cleanResult = (data.result || data.error || 'tidak ada hasil.')
-          .replace(/```(json|html|css|text)?\s*([\s\S]*?)```/gi, '$2') // hapus markdown code block
+          .replace(/```(json|html|css|TEXT|text)?\s*([\s\S]*?)```/gi, '$2') // hapus markdown code block
           .trim();
 
         output.textContent = cleanResult || 'tidak ada hasil.';
