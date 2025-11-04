@@ -598,6 +598,20 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
 
     let currentFile = null; // menyimpan file yang diunggah
     let ketikIlustrasiTimeout; // Simpan ID timeout agar bisa dihentikan
+// === VARIABEL GLOBAL UNTUK FORMAT OTOMATIS ===
+let rawJson = "";
+
+
+// === EVENT HANDLER UNTUK RADIO FORMAT ===
+const formatRadiosAfterRender = document.querySelectorAll('#format-options input[name="format"]');
+formatRadiosAfterRender.forEach(radio => {
+  radio.addEventListener('click', () => {
+    const selectedFormat = radio.value;
+    updateFormat(selectedFormat);
+  });
+});
+
+
 
     // === logika hide/show format output ===
     const typeRadios = document.querySelectorAll('input[name="type"]');
@@ -848,13 +862,13 @@ function updateFormat(format) {
         const res = await fetch('/api/gemini', { method: 'POST', body: formData }); // Perbaiki method 'post'
 
         if (!res.ok) {
-          const errorData = await res.json(); // Perbaiki errordata
-          throw new Error(errorData.error || `server error: ${res.status}`); // Perbaiki error
-        }
+  const errorData = await res.json();
+  throw new Error(errorData.error || `server error: ${res.status}`);
+}
 
-        const data = await res.json();
+const data = await res.json();
 
-        let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
+let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
   // Hapus blok markdown seperti ```json ... ```
   .replace(/```(json|html|css|text|TEXT)?\s*([\s\S]*?)```/gi, '$2')
   // Hapus markup markdown
@@ -872,10 +886,14 @@ function updateFormat(format) {
   .trim();
 
 
-        // 🔥 Tambahkan deteksi otomatis format JSON
-        cleanResult = autoJsonToText(cleanResult);
-        output.textContent = cleanResult || 'tidak ada hasil.';
-        
+// 🔥 Deteksi otomatis JSON → teks jika perlu
+const autoConverted = autoJsonToText(cleanResult);
+
+// Simpan hasil mentah & tampilkan di layar
+rawJson = cleanResult.trim(); // simpan hasil asli untuk toggle format
+output.textContent = autoConverted || 'tidak ada hasil.';
+
+
       } catch (err) {
         console.error("error saat mengirim prompt:", err);
         output.textContent = 'terjadi kesalahan: ' + err.message;
@@ -886,6 +904,16 @@ function updateFormat(format) {
         donateSection.style.display = 'block'; // tampilkan kembali donasi
       }
     });
+
+
+// === EVENT HANDLER UNTUK RADIO FORMAT ===
+const formatRadiosAfterRender = document.querySelectorAll('#format-options input[name="format"]');
+formatRadiosAfterRender.forEach(radio => {
+  radio.addEventListener('click', () => {
+    const selectedFormat = radio.value;
+    updateFormat(selectedFormat);
+  });
+});
 
     </script>
 </body>
