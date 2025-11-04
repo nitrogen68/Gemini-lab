@@ -573,20 +573,38 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
   </footer>
 
 <div style="text-align:center; margin-top:10px;">
-  <div id="sfcf96byatewapcbfmcec893r73ukt4a8er" style="display:inline-block; transform:scale(0.8); transform-origin:center;"></div>
-  <script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=f96byatewapcbfmcec893r73ukt4a8er&down=async" async></script>
-  <noscript>
-    <a href="https://www.freecounterstat.com" title="free website counter code">
-      <img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=f96byatewapcbfmcec893r73ukt4a8er" 
-           border="0" 
-           title="free website counter code" 
-           alt="free website counter code"
-           style="transform:scale(0.8); transform-origin:center;">
-    </a>
-  </noscript>
+  <div id="hits-container" style="
+    display:inline-block;
+    background:#111;
+    color:#00ffcc;
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    border-radius:10px;
+    padding:10px 20px;
+    box-shadow:0 0 10px rgba(0,255,204,0.3);
+  ">
+    <div style="font-size:12px; color:#aaa;">Total Kunjungan</div>
+    <div id="hits-count" style="font-size:22px; font-weight:bold; margin-top:5px;">--</div>
+  </div>
 </div>
   
     <script>
+async function loadHits() {
+  try {
+    const res = await fetch("https://raw.githubusercontent.com/nitrogen68/Gemini-lab/main/data/hits.json?" + Date.now());
+    if (!res.ok) throw new Error("Gagal memuat data hits");
+    const data = await res.json();
+    document.getElementById("hits-count").textContent = data.hits || 0;
+  } catch (err) {
+    console.error(err);
+    document.getElementById("hits-count").textContent = "0";
+  }
+}
+
+// panggil fungsi saat halaman dibuka
+loadHits();
+
+      
     // --- Helper function for getting elements by ID (case-sensitive fix) ---
     function getElementByIdFixed(id) {
         const element = document.getElementById(id);
@@ -872,7 +890,21 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
       setOptionsEnabled(false); 
       
       try {
-        const formData = new FormData();
+    // 1) coba hit counter (tidak fatal jika gagal)
+    try {
+      const hitRes = await fetch('/api/updateHits', { method: 'POST' });
+      if (hitRes.ok) {
+        const hitData = await hitRes.json();
+        console.log('Hit sukses:', hitData);
+      } else {
+        console.warn('Hit tidak tercatat, status:', hitRes.status);
+      }
+    } catch (hitErr) {
+      console.warn('Gagal panggil updateHits:', hitErr);
+      // jangan throw -> tetap lanjutkan proses utama
+    }
+
+       const formData = new FormData();
         let finalPrompt = '';
 
         // mengambil template prompt dari textarea
