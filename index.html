@@ -891,18 +891,29 @@ loadHits();
       
       try {
     // 1) coba hit counter (tidak fatal jika gagal)
-    try {
-      const hitRes = await fetch('/api/updateHits', { method: 'POST' });
-      if (hitRes.ok) {
-        const hitData = await hitRes.json();
-        console.log('Hit sukses:', hitData);
-      } else {
-        console.warn('Hit tidak tercatat, status:', hitRes.status);
-      }
-    } catch (hitErr) {
-      console.warn('Gagal panggil updateHits:', hitErr);
-      // jangan throw -> tetap lanjutkan proses utama
-    }
+    // === Bagian yang sudah diperbaiki ===
+try {
+  const hitRes = await fetch('/api/updateHits', {
+    method: 'POST',
+    // 1. Tambahkan Header Content-Type
+    headers: { 'Content-Type': 'application/json' }, 
+    // 2. Tambahkan Body JSON kosong (atau data apa pun yang dibutuhkan backend)
+    body: JSON.stringify({}) 
+  });
+  
+  if (hitRes.ok) {
+    const hitData = await hitRes.json();
+    console.log('Hit sukses:', hitData);
+  } else {
+    // Pesan peringatan yang ditingkatkan untuk debugging
+    console.warn('Hit tidak tercatat, status:', hitRes.status, 'Body respons:', await hitRes.text());
+  }
+} catch (hitErr) {
+  console.warn('Gagal panggil updateHits:', hitErr);
+  // jangan throw -> tetap lanjutkan proses utama
+}
+// ===================================
+
 
        const formData = new FormData();
         let finalPrompt = '';
