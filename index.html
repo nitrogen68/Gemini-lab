@@ -893,25 +893,33 @@ loadHits();
     // 1) coba hit counter (tidak fatal jika gagal)
     // === Bagian yang sudah diperbaiki ===
 try {
-  const hitRes = await fetch('/api/updateHits', {
-    method: 'POST',
-    // 1. Tambahkan Header Content-Type
-    headers: { 'Content-Type': 'application/json' }, 
-    // 2. Tambahkan Body JSON kosong (atau data apa pun yang dibutuhkan backend)
-    body: JSON.stringify({}) 
-  });
-  
-  if (hitRes.ok) {
-    const hitData = await hitRes.json();
-    console.log('Hit sukses:', hitData);
-  } else {
-    // Pesan peringatan yang ditingkatkan untuk debugging
-    console.warn('Hit tidak tercatat, status:', hitRes.status, 'Body respons:', await hitRes.text());
-  }
-} catch (hitErr) {
-  console.warn('Gagal panggil updateHits:', hitErr);
-  // jangan throw -> tetap lanjutkan proses utama
-}
+    // 1) coba hit counter (tidak fatal jika gagal)
+    // === Bagian yang sudah diperbaiki (Hit Counter) ===
+    try {
+      const hitRes = await fetch('/api/updateHits', {
+        method: 'POST',
+        // 1. Tambahkan Header Content-Type
+        headers: { 'Content-Type': 'application/json' }, 
+        // 2. Kirim field data nyata untuk menghindari error 400 di server
+        body: JSON.stringify({ slug: 'hit' }) 
+      });
+      
+      if (hitRes.ok) {
+        const hitData = await hitRes.json();
+        console.log('Hit sukses:', hitData);
+        // Opsional: Perbarui tampilan hit count di frontend
+        const hitsCountElement = document.getElementById("hits-count");
+        if (hitsCountElement) {
+            hitsCountElement.textContent = hitData.hits;
+        }
+      } else {
+        // Pesan peringatan yang ditingkatkan untuk debugging
+        console.warn('Hit tidak tercatat, status:', hitRes.status, 'Body respons:', await hitRes.text());
+      }
+    } catch (hitErr) {
+      console.warn('Gagal panggil updateHits:', hitErr);
+      // jangan throw -> tetap lanjutkan proses utama
+    }
 // ===================================
 
 
