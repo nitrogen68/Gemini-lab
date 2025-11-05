@@ -1,7 +1,23 @@
-// === /api/updateHits.js (FINAL RECOMMENDED) ===
+// /api/updateHits.js
+
+// WAJIB: Aktifkan body parser
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Baca body
+  const { slug } = req.body || {};
+
+  // Validasi
+  if (!slug || typeof slug !== "string") {
+    return res.status(400).json({ error: "Field 'slug' diperlukan dan harus string" });
   }
 
   try {
@@ -13,7 +29,7 @@ export default async function handler(req, res) {
     const API_URL = "https://api.github.com/repos/nitrogen68/Gemini-lab/contents/data/hits.json";
     const BRANCH = "main";
 
-    // --- 1. GET file lama ---
+    // --- GET file lama ---
     const getRes = await fetch(`${API_URL}?ref=${BRANCH}`, {
       headers: {
         Authorization: `token ${GITHUB_TOKEN}`,
@@ -21,45 +37,36 @@ export default async function handler(req, res) {
       },
     });
 
-    let currentHits = 0;
+    let currentData = { total: 0, pages: {} };
     let sha = null;
 
-    if (getRes.status === 404) {
-      // File belum ada
-    } else if (!getRes.ok) {
-      throw new Error(`Gagal ambil file: ${getRes.status} ${await getRes.text()}`);
-    } else {
+    if (getRes.status !== 404 && getRes.ok) {
       const existing = await getRes.json();
       const decoded = Buffer.from(existing.content, "base64").toString("utf-8");
-      const parsed = JSON.parse(decoded);
-      currentHits = parsed.hits || 0;
+      currentData = JSON.parse(decoded);
       sha = existing.sha;
     }
 
-    // --- 2. Data baru ---
-    const newData = {
-      hits: currentHits + 1,
-      updated: new Date().toISOString(),
-    };
+    // --- Update hits ---
+    currentData.pages[slug] = (currentData.pages[slug] || 0) + 1;
+    currentData.total = (currentData.total || 0) + 1;
+    currentData.updated = new Date().toISOString();
 
-    const newContentBase64 = Buffer.from(JSON.stringify(newData, null, 2)).toString("base64");
+    const newContentBase64 = Buffer.from(JSON.stringify(currentData, null, 2)).toString("base64");
 
-    // --- 3. Committer (gunakan noreply GitHub) ---
     const committer = {
       name: "Gemini-Lab Bot",
-      email: "nitrogen68@users.noreply.github.com", // GANTI DENGAN USERNAME KAMU
+      email: "nitrogen68@users.noreply.github.com",
     };
 
-    // --- 4. PUT update ---
     const putBody = {
-      message: `[Automated] Hits update: ${newData.hits}`,
+      message: `[Automated] Hit: ${slug} → ${currentData.pages[slug]}`,
       content: newContentBase64,
       branch: BRANCH,
       committer,
       author: committer,
     };
-
-    if (sha) putBody.sha = sha; // Hanya jika update
+    if (sha) putBody.sha = sha;
 
     const putRes = await fetch(API_URL, {
       method: "PUT",
@@ -73,16 +80,17 @@ export default async function handler(req, res) {
 
     if (!putRes.ok) {
       const err = await putRes.json();
-      throw new Error(`GitHub API error: ${putRes.status} - ${err.message}`);
+      throw new Error(err.message || "GitHub API error");
     }
 
     return res.status(200).json({
       success: true,
-      hits: newData.hits,
-      updated: newData.updated,
+      hits: currentData.total,
+      pageHits: currentData.pages[slug],
+      updated: currentData.updated,
     });
   } catch (err) {
-    console.error("Error update hits:", err.message);
-    return res.status(500).json({ error: "Gagal update hits: " + err.message });
+    console.error("Error:", err.message);
+    return res.status(500).json({ error: err.message });
   }
 }
