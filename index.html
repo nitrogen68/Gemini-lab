@@ -950,7 +950,14 @@ if (selectedType.value === 'design') {
 } else if (selectedType.value === 'bug') {
   finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
 } else if (selectedType.value === 'random') {
-  finalPrompt = 'hasilkan sebuah potret dengan gaya acak, background acak, serta properti acak dari gambar yang diunggah. pastikan tetap mempertahankan fitur atau atribut penting seperti wajah, hijab, kacamata, atau elemen khas lainnya tetap dipertahankan sesuai dengan gambar referensi tanpa teks tambahan apapun. hasilkan potret dengan resolusi tinggi';
+  finalPrompt = `
+Buat potret bergaya acak berdasarkan gambar yang diunggah.
+- Pertahankan fitur utama seperti wajah, hijab, kacamata, atau atribut khas lainnya agar tetap sama dengan referensi.
+- Variasikan gaya pakaian, latar belakang, dan pencahayaan secara acak, namun tetap realistis dan harmonis.
+- Hindari teks, watermark, atau narasi deskriptif.
+- Jangan sertakan kalimat pembuka seperti “Berikut adalah deskripsi…” — hasilkan hanya visual atau deskripsi singkat tanpa pengantar.
+- Hasilkan potret dengan resolusi tinggi dan komposisi estetis alami.
+`;
 } else { // general
   const formatText = selectedFormat.value.toUpperCase(); 
   finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
