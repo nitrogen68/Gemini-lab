@@ -950,7 +950,7 @@ if (selectedType.value === 'design') {
 } else if (selectedType.value === 'bug') {
   finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
 } else if (selectedType.value === 'random') {
-  finalPrompt = 'hasilkan gaya acak, background acak, serta properti acak dari gambar yang diunggah. pastikan fitur atau atribut penting seperti wajah, hijab, kacamata, atau elemen khas lainnya tetap dipertahankan sesuai dengan gambar referensi.';
+  finalPrompt = 'hasilkan sebuah potret dengan gaya acak, background acak, serta properti acak dari gambar yang diunggah. pastikan tetap mempertahankan fitur atau atribut penting seperti wajah, hijab, kacamata, atau elemen khas lainnya tetap dipertahankan sesuai dengan gambar referensi tanpa teks tambahan apapun. hasilkan potret dengan resolusi tinggi';
 } else { // general
   const formatText = selectedFormat.value.toUpperCase(); 
   finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
