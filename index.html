@@ -950,13 +950,28 @@ if (selectedType.value === 'design') {
 } else if (selectedType.value === 'bug') {
   finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
 } else if (selectedType.value === 'random') {
+  const format = selectedFormat.value === 'json' ? 'JSON' : 'teks biasa';
+
   finalPrompt = `
-Buat potret bergaya acak berdasarkan gambar yang diunggah.
-- Pertahankan fitur utama seperti wajah, hijab, kacamata, atau atribut khas lainnya agar tetap sama dengan referensi.
-- Variasikan gaya pakaian, latar belakang, dan pencahayaan secara acak, namun tetap realistis dan harmonis.
-- Hindari teks, watermark, atau narasi deskriptif.
-- Jangan sertakan kalimat pembuka seperti “Berikut adalah deskripsi…” — hasilkan hanya visual atau deskripsi singkat tanpa pengantar.
-- Hasilkan potret dengan resolusi tinggi dan komposisi estetis alami.
+Analisis gambar yang diunggah secara mendetail: identifikasi wajah, ekspresi, pose, pakaian, latar belakang, pencahayaan, dan elemen kunci lainnya.
+
+Kemudian, buat 1 variasi potret baru yang:
+1. **100% mempertahankan identitas wajah, bentuk mata, hidung, bibir, rambut, hijab/kacamata (jika ada)** — jangan ubah fitur pengenal.
+2. **Acak secara kreatif dan signifikan**:
+   - Pakaian (gaya, warna, tekstur)
+   - Latar belakang (lokasi, cuaca, waktu)
+   - Pencahayaan (arah, intensitas, warna)
+   - Suasana/mood (cinematic, soft, dramatic, dll)
+3. Hasilkan **hanya 1 variasi acak per eksekusi** — jangan ulang gaya yang sama.
+4. Output dalam format **${format}**:
+   - Jika JSON: 
+     \`\`\`json
+     { "prompt": "...", "negative_prompt": "..." }
+     \`\`\`
+   - Jika teks: langsung deskripsi tanpa pembuka.
+
+JANGAN gunakan kalimat seperti "Berikut adalah...", "Ini adalah variasi...", atau penjelasan. 
+Hanya keluarkan isi prompt sesuai format.
 `;
 } else { // general
   const formatText = selectedFormat.value.toUpperCase(); 
