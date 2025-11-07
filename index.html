@@ -941,20 +941,20 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
         let basePrompt = promptTemplate.value.trim();
 
         // Logika Prompt berdasarkan Tipe
-        if (selectedType.value === 'design') {
-          if (selectedFormat.value === 'html') {
-            finalPrompt = 'deteksi apakah gambar ini memuat elemen atau desain website. jika ya, buat ulang desain tersebut hanya dalam format css+html murni tanpa teks tambahan. jika tidak ada elemen website yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
-          } else { // css (tailwind template)
-            finalPrompt = 'analisis apakah gambar ini berisi tampilan antarmuka atau gaya desain website. jika ya, hasilkan hanya kode berupa tailwind template murni tanpa teks tambahan. jika tidak ada desain ui yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
-          }
-        } else if (selectedType.value === 'bug') {
-          finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
-        } else if (selectedType.value === 'random') {
-          finalPrompt = 'analisis gaya visual dari gambar yang diunggah, lalu hasilkan versi baru dengan gaya berbeda namun tetap merepresentasikan konteks utama gambar tersebut.';
-        } else { // general
-          const formatText = selectedFormat.value.toUpperCase(); 
-          finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
-        }
+if (selectedType.value === 'design') {
+  if (selectedFormat.value === 'html') {
+    finalPrompt = 'deteksi apakah gambar ini memuat elemen atau desain website. jika ya, buat ulang desain tersebut hanya dalam format css+html murni tanpa teks tambahan. jika tidak ada elemen website yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
+  } else { // css
+    finalPrompt = 'analisis apakah gambar ini berisi tampilan antarmuka atau gaya desain website. jika ya, hasilkan hanya kode berupa tailwind template murni tanpa teks tambahan. jika tidak ada desain ui yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
+  }
+} else if (selectedType.value === 'bug') {
+  finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
+} else if (selectedType.value === 'random') {
+  finalPrompt = 'hasilkan gaya acak, background acak, serta properti acak dari gambar yang diunggah. pastikan fitur atau atribut penting seperti wajah, hijab, kacamata, atau elemen khas lainnya tetap dipertahankan sesuai dengan gambar referensi.';
+} else { // general
+  const formatText = selectedFormat.value.toUpperCase(); 
+  finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
+}
 
         formData.append('prompt', finalPrompt);
         formData.append('image', currentFile, currentFile.name);
