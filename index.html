@@ -492,11 +492,11 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
             <span class="label">general</span>
           </label>
 
-<label class="option-card">
-            <input type="radio" name="type" value="random" checked>
+          <label class="option-card">
+            <input type="radio" name="type" value="random">
             <span class="icon">🔮</span>
             <span class="label">Random</span>
-</label>
+          </label>
           
           <label class="option-card">
             <input type="radio" name="type" value="design">
@@ -602,22 +602,6 @@ jangan tambahkan teks lain di luar {format_placeholder}, cukup keluarkan isi {fo
 </noscript>
   
     <script>
-async function loadHits() {
-  try {
-    const res = await fetch("https://raw.githubusercontent.com/nitrogen68/Gemini-lab/main/data/hits.json?" + Date.now());
-    if (!res.ok) throw new Error("Gagal memuat data hits");
-    const data = await res.json();
-    document.getElementById("hits-count").textContent = data.hits || 0;
-  } catch (err) {
-    console.error(err);
-    document.getElementById("hits-count").textContent = "0";
-  }
-}
-
-// panggil fungsi saat halaman dibuka
-loadHits();
-
-      
     // --- Helper function for getting elements by ID (case-sensitive fix) ---
     function getElementByIdFixed(id) {
         const element = document.getElementById(id);
@@ -638,77 +622,67 @@ loadHits();
     const generateBtn = getElementByIdFixed('generateBtn');
     const donateSection = getElementByIdFixed('donate');
 
-    let currentFile = null; // menyimpan file yang diunggah
-    let ketikIlustrasiTimeout; // Simpan ID timeout agar bisa dihentikan
+    let currentFile = null; 
+    let ketikIlustrasiTimeout; 
+    let rawJson = ""; 
 
-    // === VARIABEL GLOBAL UNTUK FORMAT OTOMATIS ===
-    let rawJson = ""; // Menyimpan hasil mentah yang bersih setelah pemrosesan
-
-    // === logika hide/show format output ===
     const typeRadios = document.querySelectorAll('input[name="type"]');
     const formatOptionsWrapper = getElementByIdFixed('format-options');
     const formatCards = formatOptionsWrapper.querySelectorAll('.option-card');
     const formatRadios = formatOptionsWrapper.querySelectorAll('input[name="format"]');
     
-    // reset isi awal
-    output.textContent = "";
+    // Daftar ilustrasi teks yang disederhanakan
+    const ilustrasiMap = {
+      'general': '💡 Unggah gambar untuk menghasilkan deskripsi detail secara otomatis...',
+      'random': '🎲 Hasilkan prompt acak dari gambar yang kamu upload...',
+      'design': '🎨 Upload potongan desainmu dan ubah menjadi potongan kode website siap pakai...',
+      'bug': '🐞 Kirim tangkapan layar error untuk mendeteksi penyebab dan solusinya...'
+    };
 
-    // daftar ilustrasi teks
-    const ilustrasiList = [
-      '💡 Unggah gambar untuk menghasilkan deskripsi detail secara otomatis...',
-      '🐞 Kirim tangkapan layar error untuk mendeteksi penyebab dan solusinya...',
-      '🎨 Upload potongan desainmu dan ubah menjadi potongan kode website siap pakai...'
-    ];
-
-    // variabel global untuk kontrol urutan dan karakter
-    let index = 0;
+    // Variabel untuk kontrol urutan dan karakter
+    let index = 0; // Index untuk looping ilustrasiMap (saat tidak ada file)
     let charIndex = 0;
     let isTypingActive = false;
 
+    output.textContent = "hasil akan muncul di sini..."; // Reset isi awal
+
+    // === Logika Animasi Typing ===
     function ketikIlustrasi() {
-    function ketikIlustrasi() {
-  if (currentFile) return; // Jangan jalankan jika sudah ada file
+      if (currentFile) return; 
 
-  isTypingActive = true;
-  clearTimeout(ketikIlustrasiTimeout); // Pastikan timeout sebelumnya dihentikan
+      isTypingActive = true;
+      clearTimeout(ketikIlustrasiTimeout); 
+      
+      // Ambil kunci (key) dari ilustrasiMap
+      const keys = Object.keys(ilustrasiMap);
+      
+      // Loop melalui keys jika tidak ada file yang diunggah
+      const teks = ilustrasiMap[keys[index]]; 
 
-  const selectedType = document.querySelector('input[name="type"]:checked')?.value;
-
-  let teks = "";
-  if (selectedType === "general") {
-    teks = "💡 Unggah gambar untuk menghasilkan deskripsi detail secara otomatis...";
-  } else if (selectedType === "bug") {
-    teks = "🐞 Kirim tangkapan layar error untuk mendeteksi penyebab dan solusinya...";
-  } else if (selectedType === "design") {
-    teks = "🎨 Upload potongan desainmu dan ubah menjadi potongan kode website siap pakai...";
-  } else if (selectedType === "random") {
-    teks = "🎲 Hasilkan prompt acak dari gambar yang kamu upload...";
-  }
-
-  output.textContent = teks;
-
-  if (charIndex < ilustrasiList[index].length) {
-    output.textContent += ilustrasiList[index].charAt(charIndex);
-    charIndex++;
-    ketikIlustrasiTimeout = setTimeout(ketikIlustrasi, 60);
-  } else {
-    ketikIlustrasiTimeout = setTimeout(() => {
-      output.textContent = "";
-      index = (index + 1) % ilustrasiList.length;
-      charIndex = 0;
-      ketikIlustrasi();
-    }, 2000);
-  }
-}
+      if (charIndex < teks.length) {
+        output.textContent = teks.substring(0, charIndex + 1);
+        charIndex++;
+        ketikIlustrasiTimeout = setTimeout(ketikIlustrasi, 60);
+      } else {
+        // Teks selesai diketik, tunggu sebentar, lalu mulai teks berikutnya
+        ketikIlustrasiTimeout = setTimeout(() => {
+          output.textContent = "";
+          index = (index + 1) % keys.length; // Pindah ke index berikutnya
+          charIndex = 0;
+          ketikIlustrasi();
+        }, 2000);
+      }
+    }
 
     function stopKetikIlustrasi() {
       clearTimeout(ketikIlustrasiTimeout);
       isTypingActive = false;
     }
     
-    // jalankan animasi
+    // Jalankan animasi saat halaman dimuat
     ketikIlustrasi();
 
+    // === Logika Visibilitas Format Output Berdasarkan Tipe Prompt ===
     function updateFormatVisibility() {
       const selectedType = document.querySelector('input[name="type"]:checked')?.value || 'general';
 
@@ -717,39 +691,49 @@ loadHits();
         const input = card.querySelector('input');
 
         card.classList.add('hidden');
-        input.checked = false; 
+        input.checked = false; // Reset semua checkmark
 
-        if (selectedType === 'general') {
+        if (selectedType === 'general' || selectedType === 'random') {
           if (['json', 'text'].includes(format)) {
             card.classList.remove('hidden');
-            if (format === 'json') input.checked = true; // default ke json
+            if (format === 'json') input.checked = true; 
           }
         } else if (selectedType === 'design') {
           if (['html', 'css'].includes(format)) {
             card.classList.remove('hidden');
-            if (format === 'html') input.checked = true; // default ke html
+            if (format === 'html') input.checked = true;
           }
         } else if (selectedType === 'bug') {
           if (['text'].includes(format)) {
             card.classList.remove('hidden');
-            if (format === 'text') input.checked = true; // default ke text
+            if (format === 'text') input.checked = true; 
           }
         }
       });
+      
+      // Panggil updateFormat setelah mengatur checkmark default
+      updateFormat(document.querySelector('input[name="format"]:checked')?.value);
     }
 
-    // jalankan saat load & saat ganti type
+    // Event handler ganti type
     typeRadios.forEach(radio => radio.addEventListener('change', () => {
         updateFormatVisibility();
-        // Reset output hanya jika hasil belum ada (rawJson kosong)
-        if (!rawJson) {
+        if (!currentFile) {
+            output.textContent = ilustrasiMap[radio.value]; // Langsung tampilkan teks ilustrasi yang baru
+            stopKetikIlustrasi(); // Hentikan loop animasi lama
+            index = Object.keys(ilustrasiMap).indexOf(radio.value); // Atur ulang index untuk loop baru
+            charIndex = 0;
+            ketikIlustrasi(); // Mulai animasi typing yang baru
+        } else if (rawJson) {
+            // Jika ada file dan hasil lama, tampilkan hasil sesuai format baru (yang diupdate di updateFormatVisibility)
+            updateFormat(document.querySelector('input[name="format"]:checked')?.value);
+        } else {
             output.textContent = 'hasil akan muncul di sini...';
-            stopKetikIlustrasi(); // Stop saat ganti type, siap untuk generate
         }
     })); 
     updateFormatVisibility();
 
-    
+
     // === toast & copy ===
     function showToast(message) {
       toast.textContent = message;
@@ -759,7 +743,7 @@ loadHits();
       toast.hideTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
-    // Fungsi otomatis ubah JSON ke teks biasa
+    // Fungsi konversi JSON ke teks biasa yang diperbaiki
     function autoJsonToText(input) {
       const clean = input.trim();
       const isJsonLike = /^\s*\{[\s\S]*\}\s*$/.test(clean);
@@ -767,44 +751,57 @@ loadHits();
       if (isJsonLike) {
         try {
           const data = JSON.parse(clean);
-          const keys = Object.keys(data);
           let resultText = '';
+          
+          if (typeof data.prompt === 'string' && data.prompt.length > 0) {
+              resultText += `-- PROMPT GENERATION --\n${data.prompt.trim()}`;
+          }
+
+          if (typeof data.negatif === 'string' && data.negatif.length > 0) {
+              resultText += (resultText.length > 0 ? '\n\n' : '') + 
+                            `-- NEGATIVE PROMPT --\n${data.negatif.trim()}`;
+          }
+          
+          if (resultText) return resultText;
+
+          // Fallback jika format JSON tidak memiliki keys 'prompt' atau 'negatif'
+          const keys = Object.keys(data);
           keys.forEach((key, i) => {
-            if (typeof data[key] === 'string') {
+            if (typeof data[key] === 'string' && data[key].trim().length > 0) {
               resultText += (i > 0 ? '\n\n' : '') +
                             `-- ${key.toUpperCase()} --\n` +
                             data[key].trim();
             }
           });
-          return resultText || '⚠️ Tidak ada teks yang dapat diubah dari JSON.';
+          return resultText || clean; // Kembalikan JSON bersih jika tidak ada string yang terdeteksi
         } catch {
-          return input;
+          return input; // Jika parsing JSON gagal, kembalikan input asli
         }
       } else {
-        return input;
+        return input; // Bukan format JSON, kembalikan input asli
       }
     }
 
     // Event handler tombol format yang diperbarui
     function updateFormat(format) {
-      // Jika rawJson belum ada, biarkan animasi text typing berjalan normal
       if (!rawJson) {
-        if (!isTypingActive) {
-            ketikIlustrasi(); // Mulai lagi jika dihentikan karena upload lalu dihapus
-        }
+        // Jika belum ada hasil, biarkan ilustrasi atau default text
+        if (!isTypingActive && !currentFile) ketikIlustrasi(); 
         return; 
       }
 
       // Jika rawJson sudah ada, terapkan logika format
-      if (format === 'json') {
-        output.textContent = rawJson;
-      }
-      else if (format === 'text') {
-        output.textContent = autoJsonToText(rawJson);
-      }
-      else {
-        // Untuk format non-general (html, css), pertahankan hasil asli
-        output.textContent = rawJson; 
+      const selectedType = document.querySelector('input[name="type"]:checked')?.value || 'general';
+      
+      if (selectedType === 'general' || selectedType === 'random') {
+          if (format === 'json') {
+              output.textContent = rawJson;
+          } else if (format === 'text') {
+              output.textContent = autoJsonToText(rawJson);
+          }
+      } else {
+          // Untuk format non-general (html, css, bug), pertahankan hasil mentah (yang sudah bersih dari markdown block)
+          output.textContent = rawJson;
       }
     }
 
@@ -816,7 +813,7 @@ loadHits();
 
     output.addEventListener('click', async () => {
       const text = output.textContent.trim();
-      if (!text || text === "hasil akan muncul di sini..." || text === "memproses gambar, mohon tunggu...") return;
+      if (!text || text === "hasil akan muncul di sini..." || text.startsWith("memproses gambar")) return;
       try {
         await navigator.clipboard.writeText(text);
         showToast("teks berhasil disalin!");
@@ -828,20 +825,20 @@ loadHits();
 
     // === upload & preview ===
     function showPreview(file) {
-      stopKetikIlustrasi(); // Hentikan animasi saat file di-upload
-      output.textContent = 'hasil akan muncul di sini...'; // Reset output sebelum proses
+      stopKetikIlustrasi(); 
+      output.textContent = 'hasil akan muncul di sini...'; 
 
       if (!file || !file.type.startsWith('image/')) {
         showToast('file yang diunggah harus berupa gambar.');
         return;
       }
-      if (file.size > 3 * 1024 * 1024) { // batas 3mb
+      if (file.size > 3 * 1024 * 1024) { 
         showToast('ukuran gambar maksimal 3mb.');
         return;
       }
 
-      currentFile = file; // simpan file yang valid
-      rawJson = ""; // Reset hasil lama saat upload baru
+      currentFile = file; 
+      rawJson = ""; 
       const reader = new FileReader();
       reader.onload = e => {
         previewImage.src = e.target.result;
@@ -875,11 +872,12 @@ loadHits();
       previewImage.src = '';
       fileInput.value = '';
       currentFile = null;
-      rawJson = ""; // Reset hasil
+      rawJson = ""; 
       dropzone.style.display = 'flex';
       output.textContent = 'hasil akan muncul di sini...';
       donateSection.style.display = 'block';
-      ketikIlustrasi(); // Mulai animasi lagi setelah menghapus gambar
+      ketikIlustrasi(); 
+      updateFormatVisibility(); // Pastikan opsi format kembali ke default General
     });
     
     // Tambahkan fungsi untuk mengontrol status radio button
@@ -890,11 +888,11 @@ loadHits();
       document.querySelectorAll('.option-card').forEach(card => {
         card.style.cursor = enabled ? 'pointer' : 'not-allowed';
         card.style.opacity = enabled ? '1' : '0.6';
-        card.style.transform = 'none'; // Hilangkan efek hover saat disabled
+        card.style.transform = 'none'; 
       });
     }
 
-    // === send prompt (Logika Final Diperbaiki) ===
+    // === send prompt (Logika Final) ===
     generateBtn.addEventListener('click', async () => {
       if (!currentFile) {
         output.textContent = 'mohon unggah gambar terlebih dahulu.';
@@ -918,67 +916,51 @@ loadHits();
       // 2. Nonaktifkan semua radio button (opsi)
       setOptionsEnabled(false); 
       
-    try {
-    // 1) coba hit counter (tidak fatal jika gagal)
-    // === Bagian yang sudah diperbaiki (Hit Counter) ===
-    try {
-  const hitRes = await fetch('/api/updateHits', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    // HAPUS BODY → backend tidak butuh
-    // body: JSON.stringify({ slug: 'hit' })
-  });
-
-  if (hitRes.ok) {
-    const hitData = await hitRes.json();
-    console.log('Hit sukses:', hitData);
-
-    const hitsCountElement = document.getElementById("hits-count");
-    if (hitsCountElement) {
-      hitsCountElement.textContent = hitData.hits;
-    }
-  } else {
-    console.warn('Hit tidak tercatat:', hitRes.status, await hitRes.text());
-  }
-} catch (hitErr) {
-  console.warn('Gagal panggil updateHits:', hitErr);
-}
-// ===================================
+      try {
+        // === Panggilan Hit Counter (Dibiarkan apa adanya karena ini asumsi koneksi ke API server Anda) ===
+        try {
+            // Asumsi API /api/updateHits ada di server
+            const hitRes = await fetch('/api/updateHits', { method: 'POST' });
+            if (hitRes.ok) {
+                const hitData = await hitRes.json();
+                const hitsCountElement = document.getElementById("sfclrfwqlgy6nutkhx9zyl998dla9xbmnws");
+                if (hitsCountElement) {
+                  hitsCountElement.textContent = hitData.hits;
+                }
+            }
+        } catch (hitErr) {
+            console.warn('Gagal panggil updateHits:', hitErr);
+        }
+        // ===================================
 
 
-       const formData = new FormData();
+        const formData = new FormData();
         let finalPrompt = '';
 
         // mengambil template prompt dari textarea
         let basePrompt = promptTemplate.value.trim();
 
-// Logika Prompt berdasarkan Tipe
-if (selectedType.value === 'design') {
-  if (selectedFormat.value === 'html') {
-    finalPrompt = 'deteksi apakah gambar ini memuat elemen atau desain website. jika ya, buat ulang desain tersebut hanya dalam format css+html murni tanpa teks tambahan. jika tidak ada elemen website yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
-  } else { // css
-    finalPrompt = 'analisis apakah gambar ini berisi tampilan antarmuka atau gaya desain website. jika ya, hasilkan hanya kode berupa tailwind template murni tanpa teks tambahan. jika tidak ada desain ui yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
-  }
-} else if (selectedType.value === 'bug') {
-  finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
-} else if (selectedType.value === 'random') {
-  finalPrompt = 'analisis gaya visual dari gambar yang diunggah, lalu hasilkan versi baru dengan gaya berbeda namun tetap merepresentasikan konteks utama gambar tersebut.';
-} else { // general
-  const formatText = selectedFormat.value.toUpperCase(); 
-  finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
-      }
-
-        formData.append('prompt', finalPrompt);
-        if (currentFile) {
-          formData.append('image', currentFile, currentFile.name);
-        } else {
-          throw new Error("Tidak ada gambar yang diunggah untuk dikirim.");
+        // Logika Prompt berdasarkan Tipe
+        if (selectedType.value === 'design') {
+          if (selectedFormat.value === 'html') {
+            finalPrompt = 'deteksi apakah gambar ini memuat elemen atau desain website. jika ya, buat ulang desain tersebut hanya dalam format css+html murni tanpa teks tambahan. jika tidak ada elemen website yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
+          } else { // css (tailwind template)
+            finalPrompt = 'analisis apakah gambar ini berisi tampilan antarmuka atau gaya desain website. jika ya, hasilkan hanya kode berupa tailwind template murni tanpa teks tambahan. jika tidak ada desain ui yang terdeteksi, balas dengan teks: "maaf, tidak ada desain html atau css yang terdeteksi."';
+          }
+        } else if (selectedType.value === 'bug') {
+          finalPrompt = 'analisis gambar ini, deteksi jika ada kode error, pesan kesalahan, atau indikasi bug. jelaskan secara singkat penyebabnya dan solusi perbaikannya. jika gambar tidak berisi konteks bug atau error, jawab: "maaf, gambar ini tidak mengandung bug atau error yang dapat dianalisis."';
+        } else if (selectedType.value === 'random') {
+          finalPrompt = 'analisis gaya visual dari gambar yang diunggah, lalu hasilkan versi baru dengan gaya berbeda namun tetap merepresentasikan konteks utama gambar tersebut.';
+        } else { // general
+          const formatText = selectedFormat.value.toUpperCase(); 
+          finalPrompt = basePrompt.replace(/{format_placeholder}/g, formatText);
         }
 
-        // PERHATIAN: Hapus baris di bawah ini dan uncomment kode fetch saat deploy!
-        // =========================================================================
+        formData.append('prompt', finalPrompt);
+        formData.append('image', currentFile, currentFile.name);
+
+        // PERHATIAN: Asumsi endpoint API adalah '/api/gemini'
         const res = await fetch('/api/gemini', { method: 'POST', body: formData });
-        // =========================================================================
 
         if (!res.ok) {  
           const errorData = await res.json();  
@@ -987,19 +969,17 @@ if (selectedType.value === 'design') {
   
         const data = await res.json();
 
+        // Pembersihan Output
         let cleanResult = (data.result || data.error || 'Tidak ada hasil.')
-          // Hapus blok markdown
+          // Hapus blok markdown (Markdown blocks: ```json ... ```)
           .replace(/```(json|html|css|text|TEXT)?\s*([\s\S]*?)```/gi, '$2')
-          // Hapus markup markdown
+          // Hapus markup markdown yang berulang
           .replace(/\*\*(.*?)\*\*/g, '$1')
           .replace(/\*(.*?)\*/g, '$1')
           .replace(/_(.*?)_/g, '$1')
-          // Perapihan
-          .replace(/([A-Z][A-Za-z ]+):\s*\n/g, '\n\n$1:\n')
-          .replace(/^\s*[-*+]\s*/gm, '• ')
-          .replace(/^\s*\d+\.\s*/gm, (match) => match.trim() + ' ')
-          .replace(/\n{3,}/g, '\n\n')
+          // Perapihan: Hapus spasi/tab di akhir baris dan konsolidasi baris kosong
           .replace(/[ \t]+$/gm, '')
+          .replace(/\n{3,}/g, '\n\n')
           .trim();
 
 
@@ -1007,23 +987,18 @@ if (selectedType.value === 'design') {
         rawJson = cleanResult; 
         
         // Tampilkan hasil berdasarkan format yang sedang terpilih
-        if (selectedType.value === 'general') {
-            updateFormat(selectedFormat.value); // Panggil updateFormat untuk format general
-        } else {
-            // Untuk format non-general (design, bug), langsung tampilkan hasil bersih
-            output.textContent = rawJson || 'tidak ada hasil.';
-        }
+        updateFormat(selectedFormat.value);
         
       } catch (err) {
         console.error("error saat mengirim prompt:", err);
         output.textContent = 'terjadi kesalahan: ' + err.message;
-        rawJson = ""; // Pastikan rawJson kosong jika terjadi error
+        rawJson = ""; 
       } finally {
         // 4. Selalu kembalikan tombol & aktifkan opsi
         generateBtn.disabled = false;
         generateBtn.innerHTML = 'Generate Prompt';
         donateSection.style.display = 'block'; 
-        setOptionsEnabled(true); // Aktifkan kembali semua radio button
+        setOptionsEnabled(true); 
       }
     });
     
