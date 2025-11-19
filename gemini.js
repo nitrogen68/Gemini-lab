@@ -102,6 +102,7 @@ console.log("✅ GEMINI_API_KEY berhasil dimuat.");
 
       if (parts.length === 0) {
         console.log("⚠️ Tidak ada konten (teks/gambar) yang dikirim.");
+        // 🚨 PERBAIKAN SINTAKSIS: Gabungkan string yang terpotong
         res.status(400).send("Tidak ada konten untuk diproses");
         return;
       }
