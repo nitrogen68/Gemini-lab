@@ -984,10 +984,19 @@ Hanya keluarkan isi prompt sesuai format.
         // PERHATIAN: Asumsi endpoint API adalah '/api/gemini'
         const res = await fetch('/api/gemini', { method: 'POST', body: formData });
 
+        
         if (!res.ok) {  
-          const errorData = await res.json();  
-          throw new Error(errorData.error || `server error: ${res.status}`);
-        }  
+      const errorData = await res.json();  
+      
+      // ⚠️ PERBAIKAN DI SINI:
+      // Pastikan kita mengambil properti 'message' jika tersedia di struktur error.
+      const errorMessage = errorData?.error?.message 
+          || errorData.error // Fallback jika error adalah string biasa
+          || `Server error: ${res.status}`;
+      
+      // Lempar pesan error yang sudah berbentuk string
+      throw new Error(errorMessage);
+    }  
   
         const data = await res.json();
 
@@ -1011,11 +1020,14 @@ Hanya keluarkan isi prompt sesuai format.
         // Tampilkan hasil berdasarkan format yang sedang terpilih
         updateFormat(selectedFormat.value);
         
-      } catch (err) {
-        console.error("error saat mengirim prompt:", err);
-        output.textContent = 'terjadi kesalahan: ' + err.message;
-        rawJson = ""; 
-      } finally {
+        } catch (err) {
+    console.error("error saat mengirim prompt:", err);
+    
+    // ✅ PERBAIKAN DI SINI:
+    // Sekarang err.message sudah pasti berupa string yang bersih
+    output.textContent = 'Terjadi kesalahan: ' + err.message; 
+    rawJson = ""; 
+  } finally {
         // 4. Selalu kembalikan tombol & aktifkan opsi
         generateBtn.disabled = false;
         generateBtn.innerHTML = 'Generate Prompt';
