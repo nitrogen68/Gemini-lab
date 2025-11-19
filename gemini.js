@@ -69,7 +69,7 @@ console.log("✅ GEMINI_API_KEY berhasil dimuat.");
 
     const MODEL = "gemini-2.5-flash";
     const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
-
+    
     try {
       const form = formidable({});
     
@@ -102,10 +102,12 @@ console.log("✅ GEMINI_API_KEY berhasil dimuat.");
 
       if (parts.length === 0) {
         console.log("⚠️ Tidak ada konten (teks/gambar) yang dikirim.");
-        res.status(400).send("Tidak ada konten untuk diproses");
+        res.status(400).send("Tid
+                             ak ada konten untuk diproses");
         return;
       }
 
+      
       // === Panggil API Gemini ===
       const response = await fetch(
         `${BASE_URL}/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`,
@@ -116,13 +118,33 @@ console.log("✅ GEMINI_API_KEY berhasil dimuat.");
         }
       );
 
-      const data = await response.json();
+      // 🛑 SOLUSI: Cek status HTTP terlebih dahulu
+      if (!response.ok) {
+        // Jika status BUKAN 200 (misalnya 503, 429), coba baca sebagai teks
+        const errorText = await response.text(); 
+        
+        console.error(`❌ API Error [Status ${response.status}]:`, errorText);
 
-      if (data.error) {
-        console.log("❌ API Error:", data.error.message);
-        res.status(data.error.code || 500).send("API Error");
+        // Pastikan Anda mengirim respons JSON ke FrontEnd agar FrontEnd tidak crash
+        res.status(response.status || 500).json({ 
+            error: {
+                message: errorText.substring(0, 256) // Potong pesan error jika terlalu panjang
+            } 
+        });
         return;
       }
+
+      // Jika response.ok adalah TRUE, aman untuk mengurai JSON
+      const data = await response.json(); 
+
+      if (data.error) {
+        console.log("❌ API Error (dalam JSON):", data.error.message);
+        res.status(data.error.code || 500).json({ 
+             error: data.error 
+        }); // Kirim JSON error ke FrontEnd
+        return;
+      }
+      
 
       const text =
         data?.candidates?.[0]?.content?.parts?.[0]?.text ||
@@ -130,12 +152,19 @@ console.log("✅ GEMINI_API_KEY berhasil dimuat.");
 
       console.log("✅ Respons Gemini:", text);
       res.status(200).json({ result: text });
+    
     } catch (err) {
       console.log("❌ Kesalahan internal:", err.message);
-      res.status(500).send("Kesalahan internal server");
+      // ⚠️ Ganti .send() menjadi .json() untuk konsistensi
+      res.status(500).json({ 
+          error: {
+              message: "Kesalahan internal server: " + err.message
+          }
+      });
     }
     return;
   }
+
 
   // ====== METHOD LAIN ( selain GET & POST ) ======
   console.log("⚠️ Metode tidak diizinkan:", req.method);
