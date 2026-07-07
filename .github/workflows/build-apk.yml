@@ -1,0 +1,39 @@
+name: Build Android APK
+
+# Action ini akan berjalan otomatis setiap ada 'push' ke branch 'main'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Mengambil kodemu dari repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Menginstal Java (syarat utama untuk build Android)
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17' # Sesuaikan versi Java dengan proyekmu (11 atau 17 biasanya)
+
+      # 3. Menjalankan perintah Build Gradle
+      - name: Build APK with Gradle
+        # Jika folder 'android' ada di sub-folder, tambahkan 'cd android &&' sebelum chmod
+        run: |
+          cd android 
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      # 4. Mengunggah hasil APK agar bisa kamu download
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aplikasi-android-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
